@@ -27,6 +27,9 @@ dbWriteTable(mydb, "airlines", json_data, row.names = FALSE, overwrite = TRUE)
 excel_data <- read_excel("data/airports.xlsx")
 dbWriteTable(mydb, "airports", excel_data, row.names = FALSE, overwrite = TRUE)
 
+flights_data <- read_excel("data/flights.xlsx")
+dbWriteTable(mydb, "flights", flights_data, row.names = FALSE, overwrite = TRUE)
+
 dbDisconnect(mydb)
 ```
 
