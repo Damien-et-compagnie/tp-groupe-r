@@ -1,0 +1,73 @@
+# Librairies
+```{r}
+library(DBI)
+library(RMariaDB)
+library(jsonlite)
+library(readxl)
+```
+
+# Connexion à la BDD mysql
+```{r}
+db_user <- '384054_admin'
+db_password <- 'qZ9XcWesVVq9tiY'
+db_name <- 'tp-groupe-r_airport'
+db_host <- 'mysql-tp-groupe-r.alwaysdata.net'
+db_port <- 3306
+
+# Connexion à la base de données
+mydb <- dbConnect(MariaDB(), user = db_user, password = db_password,
+                  dbname = db_name, host = db_host, port = db_port)
+```
+
+# Insertion des données
+```{r}
+json_data <- fromJSON("data/airlines.json")
+dbWriteTable(mydb, "airlines", json_data, row.names = FALSE, overwrite = TRUE)
+
+excel_data <- read_excel("data/airports.xlsx")
+dbWriteTable(mydb, "airports", excel_data, row.names = FALSE, overwrite = TRUE)
+
+dbDisconnect(mydb)
+```
+
+
+
+
+
+```{r}
+library(readxl)
+airports <- read_excel("data/airports.xlsx")
+
+library(jsonlite)
+airlines <- jsonlite::fromJSON("data/airlines.json")
+```
+
+# Mission 1
+```{r}
+# Compter le nombre d'aéroports
+counts <- nrow(airports)
+print(counts)
+```
+
+```{r}
+# Nombre d'aéroprt qui ne changent pas de fuseaux horaires
+table(airports$dst)
+```
+
+```{r}
+# Nombre de fuseaux horaires différents
+library(dplyr)
+n_distinct(airports$tzone)
+```
+
+```{r}
+# Nombre de companies
+n_distinct(airlines$name)
+```
+
+```{r}
+# Nombre d'avions
+library("rvest")
+planes <- html_table(read_html("data/planes.html"))[[1]]
+nrow(planes)
+```
