@@ -4,6 +4,9 @@ library(DBI)
 library(RMariaDB)
 library(jsonlite)
 library(readxl)
+library(rvest)
+library(pdftools)
+library(tidyverse)
 ```
 
 # Connexion à la BDD mysql
@@ -29,6 +32,13 @@ dbWriteTable(mydb, "airports", excel_data, row.names = FALSE, overwrite = TRUE)
 
 flights_data <- read_excel("data/flights.xlsx")
 dbWriteTable(mydb, "flights", flights_data, row.names = FALSE, overwrite = TRUE)
+
+text <- pdf_text("data/weather.pdf")
+lines <- str_split(text, "\n")[[1]]
+data_list <- str_split(lines, ",") 
+weather <- as.data.frame(do.call(rbind, data_list[-1]))
+colnames(weather) <- c("origin","year","month","day","hour","temp","dewp","humid","wind_dir","wind_speed","wind_gust","precip","pressure","visib","time_hour")
+dbWriteTable(mydb, "weather", weather, row.names = FALSE, overwrite = TRUE)
 
 dbDisconnect(mydb)
 ```
