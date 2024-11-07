@@ -47,166 +47,120 @@ dbDisconnect(mydb)
 
 
 ```{r}
-library(readxl)
-airports <- read_excel("data/airports.xlsx")
 
-library(jsonlite)
-airlines <- jsonlite::fromJSON("data/airlines.json")
+airports <- dbGetQuery(mydb, "SELECT * FROM airports")
+airlines <- dbGetQuery(mydb, "SELECT * FROM airlines")
+flights <- dbGetQuery(mydb, "SELECT * FROM flights")
+planes <- dbGetQuery(mydb, "SELECT * FROM planes")
 ```
 
 # Mission 1
 ## 1.
+Compter le nombre d'aéroports
 ```{r}
-# Compter le nombre d'aéroports
-
-result <- dbGetQuery(mydb, "SELECT COUNT(*) AS nbr_airports FROM airports")
-print(result)
+print(nrow(airports))
 ```
 
 ```{r}
 # Nombre d'aéroprt qui ne changent pas de fuseaux horaires
-
-result <- dbGetQuery(mydb, "SELECT dst, COUNT(*) FROM airports GROUP BY dst")
-print(result)
+print(table(airports$dst))
 ```
 
 ```{r}
 # Nombre de fuseaux horaires différents
-result <- dbGetQuery(mydb, "SELECT COUNT(DISTINCT(tzone)) FROM airports")
-print(result)
+
+print(n_distinct(airports$tzone))
 ```
 
 ```{r}
 # Nombre de companies
-result <- dbGetQuery(mydb, "SELECT COUNT(*) AS nbr_companies FROM airlines")
-print(result)
+print(nrow(airlines))
 ```
 
 ```{r}
 # Nombre d'avions
 
-result <- dbGetQuery(mydb, "SELECT COUNT(*) AS nbr_avions FROM planes")
-print(result)
+print(nrow(df_planes))
 ```
 
 ```{r}
 # Nombre de vols annulés
 
-result <- dbGetQuery(mydb, "SELECT COUNT(*) FROM flights WHERE air_time IS NULL")
-print(result)
+
+print(nrow(subset(flights, is.na(air_time))))
 ```
 
 ## 2
 ```{r}
 # aéroport de départ le plus emprunté
 
-result <- dbGetQuery(mydb, "SELECT a.name, COUNT(*) AS depart 
-FROM flights f 
-LEFT JOIN airports a ON f.origin = a.faa 
-GROUP BY f.origin  
-ORDER BY depart DESC 
-LIMIT 1;")
-print(result)
+
+print(sort(table(flights$origin), decreasing = TRUE))
 ```
 
 ```{r}
 # destination les plus prisés
 
-result <- dbGetQuery(mydb, "SELECT a.name, COUNT(*) AS destination, (COUNT(*) / (SELECT COUNT(*) FROM flights) * 100) AS pourcentage
-FROM flights f 
-LEFT JOIN airports a ON f.dest = a.faa 
-GROUP BY dest  
-ORDER BY destination DESC;")
-print(result)
+print(sort(table(flights$dest), decreasing= TRUE))
 ```
 
 ```{r}
 # destination les moins prisés
 
-result <- dbGetQuery(mydb, "SELECT a.name, COUNT(*) AS destination, (COUNT(*) / (SELECT COUNT(*) FROM flights) * 100) AS percent
-FROM flights f 
-LEFT JOIN airports a ON f.dest = a.faa 
-GROUP BY dest  
-ORDER BY destination ASC;")
-print(result)
+print(sort(table(flights$dest), decreasing = FALSE))
 ```
 
 ```{r}
 # les 10 avions qui ont le plus décollés
 
-result <- dbGetQuery(mydb, "SELECT tailnum, COUNT(*) AS count
-FROM flights 
-WHERE tailnum IS NOT NULL
-GROUP BY tailnum
-ORDER BY count DESC
-LIMIT 10;")
-print(result)
+print(head(sort(table(flights$tailnum), decreasing = TRUE), 10))
 ```
 
 ```{r}
 # les 10 avions qui ont le moins décollés
 
-result <- dbGetQuery(mydb, "SELECT tailnum, COUNT(*) AS count
-FROM flights 
-WHERE tailnum IS NOT NULL
-GROUP BY tailnum
-ORDER BY count ASC
-LIMIT 10;")
-print(result)
+
+print(head(sort(table(flights$tailnum), decreasing = FALSE), 10))
 ```
 ## 3
 
 ```{r}
 # nombre de de destination par companie
 
-result <- dbGetQuery(mydb, "SELECT carrier, COUNT(DISTINCT dest) AS count
-FROM flights 
-GROUP BY carrier;")
-print(result)
-```
-
-```{r}
-# nombre de de destination par companie
-
-result <- dbGetQuery(mydb, "SELECT carrier, COUNT(DISTINCT dest) AS count
-FROM flights 
-GROUP BY carrier;")
-print(result)
+filtered_df <- df %>%
+  group_by(carrier) %>%
+  summarise(num_destinations = n_distinct(dest))
+print(filtered_df)
 ```
 
 ## 4
 Les vols ayant attéri à Houston
 
 ```{r}
-df <- dbGetQuery(mydb, "SELECT * FROM flights;")
-filtered_df <- subset(df, dest %in% c("IAH", "HOU"))
+filtered_df <- subset(flights, dest %in% c("IAH", "HOU"))
 print(filtered_df)
 ```
 
 le nombre de vol partant de NYC vers Seattle (dans ce dataset, tous les vols partent de NYC)
 ```{r}
-filtered_df <- nrow(subset(df, dest == "SEA"))
+filtered_df <- nrow(subset(flights, dest == "SEA"))
 print(filtered_df)
 ```
 Les companies qui deservent Seattle
 ```{r}
-filtered_df <- unique(subset(df, dest == "SEA")$carrier)
+filtered_df <- unique(subset(flights, dest == "SEA")$carrier)
 print(filtered_df)
 ```
 
 Le nombre d'avion unique qui vont à Seattle
 ```{r}
-filtered_df <- length(unique(subset(df, dest == "SEA")$tailnum))
+filtered_df <- length(unique(subset(flights, dest == "SEA")$tailnum))
 print(filtered_df)
 ```
 
 ## 5
 ```{r}
 # Question 5
-flights <- dbGetQuery(mydb, "SELECT *, origin AS flight_origin FROM `flights`")
-airports <- dbGetQuery(mydb, "SELECT * FROM `airports`")
-View(flights)
-View(airports)
 sapply(flights, class)
 
 # 1. Nombre de vols par destination
@@ -247,7 +201,6 @@ flight_by_dest_origin <- flights %>%
 
 View(flight_by_dest_origin)
 ```
-
 
 ## 7
 Les destination exclussives aux companies
