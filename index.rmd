@@ -259,3 +259,83 @@ filtered_df <- df %>%
 print(filtered_df)
 ```
 
+
+# 1 
+
+# Les vols les plus retardés au départ
+delayed_flights_start = flights %>%
+  arrange(desc(dep_delay))
+View(delayed_flights_start)
+
+# Les vols les plus retardés à l'arrivée
+delayed_flights_arrival = flights %>% arrange(desc(arr_delay))
+View(delayed_flights_arrival)
+
+# 2
+# Retard moyen au départ
+mean_delayed_start = mean(flights$dep_delay, na.rm = TRUE)
+print(paste("La moyenne des retard au départ est de :", mean_delayed_start, " min"))
+
+typeof(mean_delayed_start)
+
+# Retard moyen au départ par jour
+mean_delayed_start_daily = mean(flights$dep_delay, na.rm = TRUE)
+print(paste("La moyenne des retard au départ est de :", mean_delayed_start, " min"))
+
+# remplacer les valeurs nulles de dep_delay par 0
+flights <- flights %>%
+  mutate(dep_delay = ifelse(is.na(dep_delay), 0, dep_delay))
+
+mean_delayed_start_daily = flights %>% 
+  group_by(year, month, day) %>% 
+  summarise_at(vars(dep_delay), list(mean_dep_delay = mean))
+  
+  View(mean_delayed_start_daily)
+
+# 3
+# vols avec plus de 2h de retard
+over_two_hour_delay <- flights %>%
+  filter(dep_delay <= 0 & arr_delay > 120)
+  
+View(over_two_hour_delay)
+
+# Vols moins 2h retard départ et arrivée
+below_two_hour_delay <- flights %>%
+  filter(dep_delay <= 120 & arr_delay <= 120)
+View(below_two_hour_delay)
+
+# 4
+# décollés plus tot que prévu
+early_take_off = flights %>%
+  filter(dep_delay < 0)
+View(early_take_off)
+
+# atteris plus tot que prévu
+early_landing = flights %>%
+  filter(arr_delay < 0)
+View(early_landing)
+
+# 5
+caught_up_flights = flights %>%
+  filter(dep_delay > 60 & arr_delay - dep_delay < -30)
+View(caught_up_flights)
+
+# 7
+# Trier vols selon vitesse
+#speed= distance/air_time * 60
+flights_by_speed <- flights %>%
+  mutate(speed = distance / air_time * 60)
+View(flights_by_speed)
+
+# Vols les plus longs (distance)
+shortest_distance_flights <- flights %>%
+  arrange(distance)
+View(shortest_distance_flights)
+
+
+# Vols les plus court (distance)
+longest_distance_flights <- flights %>%
+  arrange(desc(distance))
+View(longest_distance_flights)
+  
+  
