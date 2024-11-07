@@ -45,8 +45,6 @@ dbDisconnect(mydb)
 
 
 
-
-
 ```{r}
 library(readxl)
 airports <- read_excel("data/airports.xlsx")
@@ -56,31 +54,124 @@ airlines <- jsonlite::fromJSON("data/airlines.json")
 ```
 
 # Mission 1
+## 1.
 ```{r}
 # Compter le nombre d'aéroports
-counts <- nrow(airports)
-print(counts)
+
+result <- dbGetQuery(mydb, "SELECT COUNT(*) AS nbr_airports FROM airports")
+print(result)
 ```
 
 ```{r}
 # Nombre d'aéroprt qui ne changent pas de fuseaux horaires
-table(airports$dst)
+
+result <- dbGetQuery(mydb, "SELECT dst, COUNT(*) FROM airports GROUP BY dst")
+print(result)
 ```
 
 ```{r}
 # Nombre de fuseaux horaires différents
-library(dplyr)
-n_distinct(airports$tzone)
+result <- dbGetQuery(mydb, "SELECT COUNT(DISTINCT(tzone)) FROM airports")
+print(result)
 ```
 
 ```{r}
 # Nombre de companies
-n_distinct(airlines$name)
+result <- dbGetQuery(mydb, "SELECT COUNT(*) AS nbr_companies FROM airlines")
+print(result)
 ```
 
 ```{r}
 # Nombre d'avions
-library("rvest")
-planes <- html_table(read_html("data/planes.html"))[[1]]
-nrow(planes)
+
+result <- dbGetQuery(mydb, "SELECT COUNT(*) AS nbr_avions FROM planes")
+print(result)
 ```
+
+```{r}
+# Nombre de vols annulés
+
+result <- dbGetQuery(mydb, "SELECT COUNT(*) FROM flights WHERE air_time IS NULL")
+print(result)
+```
+
+## 2
+```{r}
+# aéroport de départ le plus emprunté
+
+result <- dbGetQuery(mydb, "SELECT a.name, COUNT(*) AS depart 
+FROM flights f 
+LEFT JOIN airports a ON f.origin = a.faa 
+GROUP BY f.origin  
+ORDER BY depart DESC 
+LIMIT 1;")
+print(result)
+```
+
+```{r}
+# destination les plus prisés
+
+result <- dbGetQuery(mydb, "SELECT a.name, COUNT(*) AS destination, (COUNT(*) / (SELECT COUNT(*) FROM flights) * 100) AS pourcentage
+FROM flights f 
+LEFT JOIN airports a ON f.dest = a.faa 
+GROUP BY dest  
+ORDER BY destination DESC;")
+print(result)
+```
+
+```{r}
+# destination les moins prisés
+
+result <- dbGetQuery(mydb, "SELECT a.name, COUNT(*) AS destination, (COUNT(*) / (SELECT COUNT(*) FROM flights) * 100) AS percent
+FROM flights f 
+LEFT JOIN airports a ON f.dest = a.faa 
+GROUP BY dest  
+ORDER BY destination ASC;")
+print(result)
+```
+
+```{r}
+# les 10 avions qui ont le plus décollés
+
+result <- dbGetQuery(mydb, "SELECT tailnum, COUNT(*) AS count
+FROM flights 
+WHERE tailnum IS NOT NULL
+GROUP BY tailnum
+ORDER BY count DESC
+LIMIT 10;")
+print(result)
+```
+
+```{r}
+# les 10 avions qui ont le moins décollés
+
+result <- dbGetQuery(mydb, "SELECT tailnum, COUNT(*) AS count
+FROM flights 
+WHERE tailnum IS NOT NULL
+GROUP BY tailnum
+ORDER BY count ASC
+LIMIT 10;")
+print(result)
+```
+## 3
+
+```{r}
+# nombre de de destination par companie
+
+result <- dbGetQuery(mydb, "SELECT carrier, COUNT(DISTINCT dest) AS count
+FROM flights 
+GROUP BY carrier;")
+print(result)
+```
+
+```{r}
+# nombre de de destination par companie
+
+result <- dbGetQuery(mydb, "SELECT carrier, COUNT(DISTINCT dest) AS count
+FROM flights 
+GROUP BY carrier;")
+print(result)
+```
+
+
+
