@@ -174,3 +174,29 @@ GROUP BY carrier;")
 print(result)
 ```
 
+## 4
+Les vols ayant attéri à Houston
+
+```{r}
+df <- dbGetQuery(mydb, "SELECT * FROM flights;")
+filtered_df <- subset(df, dest %in% c("IAH", "HOU"))
+print(filtered_df)
+```
+
+le nombre de vol partant de NYC vers Seattle
+```{r}
+filtered_df <- nrow(subset(df, origin == "NYC" & dest == "SEA"))
+print(filtered_df)
+```
+Les companies qui deservent Seattle
+```{r}
+filtered_df <- unique(subset(df, dest == "SEA")$carrier)
+print(filtered_df)
+```
+
+Le nombre d'avion unique qui vont à Seattle
+```{r}
+filtered_df <- length(unique(subset(df, dest == "SEA")$tailnum))
+print(filtered_df)
+```
+
