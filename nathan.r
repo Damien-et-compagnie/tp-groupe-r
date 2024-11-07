@@ -1,5 +1,3 @@
-# Combien chaque compagnie a desservi de destination ; combien chaque compagnie a desservie de destination par aéroport d’origine. Réaliser les graphiques adéquats qui synthétisent ces informations ?
-
 if (!require(readxl)) {
   install.packages("readxl")
   library(readxl)
@@ -9,9 +7,15 @@ if (!require(DBI)) {
   install.packages("DBI")
   library(DBI)
 }
+
 if (!require(RMariaDB)) {
   install.packages("RMariaDB")
   library(RMariaDB)
+}
+
+if (!require(purrr)) {
+  install.packages("purrr")
+  library(purrr)
 }
 
 library(dplyr)
@@ -28,41 +32,66 @@ mydb <- dbConnect(MariaDB(), user = db_user, password = db_password,
                   dbname = db_name, host = db_host, port = db_port)
 
                   
-result <- dbGetQuery(mydb, "SELECT * FROM flights")
+flights <- dbGetQuery(mydb, "SELECT * FROM flights")
+airports <- dbGetQuery(mydb, "SELECT * FROM airports")
+airlines <- dbGetQuery(mydb, "SELECT * FROM airlines")
+weather <- dbGetQuery(mydb, "SELECT * FROM weather")
+planes <- dbGetQuery(mydb, "SELECT * FROM planes")
 
-View(result)
+summary(flights)
+summary(airports)
+View(airports)
+summary(airlines)
+summary(weather)
+summary(planes)
 
-summary(result)
+all_origins <- unique(flights$origin)
 
-# Calculer le nombre de destinations par compagnie
-dest_per_carrier <- result %>%
+coverage_by_carrier <- flights %>%
   group_by(carrier) %>%
-  summarise(num_destinations = n_distinct(dest)) %>%
-  arrange(desc(num_destinations))
+  summarise(origins_covered = n_distinct(origin),
+  covers_all_origins = n_distinct(origin) == length(all_origins))
 
-# Afficher le résultat
-print(dest_per_carrier)
+non_full_coverage <- coverage_by_carrier %>%
+  filter(!covers_all_origins)
 
-# Calculer le nombre de destinations par compagnie et par aéroport d'origine
-dest_per_carrier_origin <- result %>%
-  group_by(carrier, origin) %>%
-  summarise(num_destinations = n_distinct(dest)) %>%
-  arrange(carrier, desc(num_destinations))
+View(all_origins)
+View(coverage_by_carrier)
+View(non_full_coverage) 
 
-print(dest_per_carrier_origin)
+all_destinations <- unique(flights$dest)
 
-ggplot(dest_per_carrier, aes(x = reorder(carrier, -num_destinations), y = num_destinations)) +
-  geom_bar(stat = "identity", fill = "skyblue") +
-  labs(title = "Nombre de destinations par compagnie aérienne",
+destination_coverage <- flights %>%
+  group_by(carrier) %>%
+  summarise(destinations_covered = n_distinct(dest),
+  covers_all_destinations = n_distinct(dest) == length(all_destinations))
+
+full_destination_coverage <- destination_coverage %>%
+  filter(covers_all_destinations)
+
+print(all_destinations)
+View(all_destinations)
+View(destination_coverage)
+View(full_destination_coverage)
+
+library(ggplot2)
+
+ggplot(coverage_by_carrier, aes(x = reorder(carrier, -origins_covered), fill = covers_all_origins)) +
+  geom_bar(stat = "identity", aes(y = origins_covered)) +
+  labs(title = "Couverture complète des aéroports d'origine par chaque compagnie",
        x = "Compagnie aérienne",
-       y = "Nombre de destinations") +
+       y = "Nombre d'aéroports d'origine desservis") +
+  scale_fill_manual(values = c("TRUE" = "lightgreen", "FALSE" = "coral"),
+                    labels = c("TRUE" = "Dessert tous les aéroports", "FALSE" = "Ne dessert pas tous les aéroports")) +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
-ggplot(dest_per_carrier_origin, aes(x = carrier, y = num_destinations, fill = origin)) +
-  geom_bar(stat = "identity") +
-  labs(title = "Nombre de destinations par compagnie et aéroport d'origine",
-        x = "Compagnie aérienne",
-        y = "Nombre de destinations") +
+ggplot(destination_coverage, aes(x = reorder(carrier, -destinations_covered), fill = covers_all_destinations)) +
+  geom_bar(stat = "identity", aes(y = destinations_covered)) +
+  labs(title = "Couverture complète des destinations par chaque compagnie",
+       x = "Compagnie aérienne",
+       y = "Nombre de destinations desservies") +
+  scale_fill_manual(values = c("TRUE" = "lightblue", "FALSE" = "salmon"),
+                    labels = c("TRUE" = "Dessert toutes les destinations", "FALSE" = "Ne dessert pas toutes les destinations")) +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
