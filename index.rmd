@@ -33,7 +33,19 @@ excel_data <- read_excel("data/airports.xlsx")
 dbWriteTable(mydb, "airports", excel_data, row.names = FALSE, overwrite = TRUE)
 
 flights_data <- read_excel("data/flights.xlsx")
-dbWriteTable(mydb, "flights", flights_data, row.names = FALSE, overwrite = TRUE)
+n_rows <- nrow(flights_data)
+chunk_size <- 1000
+n_chunks <- ceiling(n_rows / chunk_size)
+pb <- progress_bar$new(
+  format = "  Importation [:bar] :percent en :elapsed",
+  total = n_chunks, clear = FALSE, width = 60
+)
+for (i in seq(1, n_rows, by = chunk_size)) {
+  chunk <- flights_data[i:min(i + chunk_size - 1, n_rows), ]
+  dbWriteTable(mydb, "flights", chunk, row.names = FALSE, append = TRUE)
+  pb$tick()
+}
+# dbWriteTable(mydb, "flights", flights_data, row.names = FALSE, overwrite = TRUE)
 
 text <- pdf_text("data/weather.pdf")
 lines <- str_split(text, "\n")[[1]]
