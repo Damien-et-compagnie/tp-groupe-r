@@ -200,3 +200,13 @@ filtered_df <- length(unique(subset(df, dest == "SEA")$tailnum))
 print(filtered_df)
 ```
 
+## 7
+Les destination exclussives aux companies
+```{r}
+filtered_df <- df %>%
+  group_by(dest) %>%
+  filter(n_distinct(carrier) == 1) %>%
+  summarise(carrier = first(carrier))
+print(filtered_df)
+```
+
