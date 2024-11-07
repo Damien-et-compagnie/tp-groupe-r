@@ -6,7 +6,9 @@ library(jsonlite)
 library(readxl)
 library(rvest)
 library(pdftools)
+library(progress)
 library(tidyverse)
+library(shiny)
 ```
 
 # Connexion à la BDD mysql
@@ -42,7 +44,6 @@ dbWriteTable(mydb, "weather", weather, row.names = FALSE, overwrite = TRUE)
 
 dbDisconnect(mydb)
 ```
-
 
 
 ```{r}
@@ -172,6 +173,4 @@ FROM flights
 GROUP BY carrier;")
 print(result)
 ```
-
-
 
