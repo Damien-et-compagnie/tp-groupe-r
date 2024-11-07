@@ -200,6 +200,55 @@ filtered_df <- length(unique(subset(df, dest == "SEA")$tailnum))
 print(filtered_df)
 ```
 
+## 5
+```{r}
+# Question 5
+flights <- dbGetQuery(mydb, "SELECT *, origin AS flight_origin FROM `flights`")
+airports <- dbGetQuery(mydb, "SELECT * FROM `airports`")
+View(flights)
+View(airports)
+sapply(flights, class)
+
+# 1. Nombre de vols par destination
+library(dplyr)
+
+flights_by_dest = flights %>% 
+  group_by(dest) %>% 
+  summarise(n_flights = n())
+
+View(flights_by_dest)
+
+# flights_by_dest_with_name = rename(flights_by_dest, origin_name = origin)
+
+flights_by_dest_with_name <- flights_by_dest %>%
+  left_join(airports, by = c("dest" = "faa")) %>%
+  select(dest, name, n_flights) %>%
+  rename(destination_name = name)
+
+colnames(flights)
+
+View(flights_by_dest_with_name)
+
+# 2. 
+flight_by_dest_origin <- flights %>%
+  left_join(airports, by = c("dest" = "faa")) %>%
+  select(dest, name, flight_origin, carrier) %>%
+  rename(destination_airport = name)
+View(flight_by_dest_origin)
+
+flight_by_dest_origin <- flights %>%
+  left_join(airports, by = c("dest" = "faa")) %>%
+  rename(destination_airport = name) %>%
+  left_join(airports, by = c("flight_origin" = "faa")) %>%
+  rename(origin_airport = name) %>%
+  select(destination_airport, origin_airport, carrier, time_hour) %>%
+  arrange(destination_airport, origin_airport, carrier)
+
+
+View(flight_by_dest_origin)
+```
+
+
 ## 7
 Les destination exclussives aux companies
 ```{r}
