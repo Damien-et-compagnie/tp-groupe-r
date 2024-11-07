@@ -1,28 +1,33 @@
+library(shiny)
 library(DBI)
 library(RMariaDB)
 
-# Établir la connexion à la base de données
-con <- dbConnect(
-  RMariaDB::MariaDB(),
-  user = "384054_admin",
-  password = "qZ9XcWesVVq9tiY",
-  dbname = "tp-groupe-r_airport",
-  host = "mysql-tp-groupe-r.alwaysdata.net",  # Par exemple, "localhost" pour un serveur local
-  port = 3306                # Par défaut, le port est 3306
-)
-
-# Vérification de la connexion
-if (!is.null(con)) {
-  cat("Connexion réussie !\n")
-} else {
-  cat("Erreur de connexion.\n")
-}
-
-
+# Interface utilisateur de l'application
 ui <- fluidPage(
   titlePanel("Analyse des données des aéroports"),
+  mainPanel(
+    tableOutput("tableData")
+  )
 )
 
-server <- function(input, output) {}
+# Serveur de l'application
+server <- function(input, output, session) {
+    con <- dbConnect(
+        RMariaDB::MariaDB(),
+        user = "384054_admin",
+        password = "qZ9XcWesVVq9tiY",
+        dbname = "tp-groupe-r_airport",
+        host = "mysql-tp-groupe-r.alwaysdata.net",
+        port = 3306
+    )
+  
+  output$tableData <- renderTable({
+    dbReadTable(con, "airlines")
+  })
+  
+  onStop(function() {
+    dbDisconnect(con)
+  })
+}
 
 shinyApp(ui = ui, server = server)

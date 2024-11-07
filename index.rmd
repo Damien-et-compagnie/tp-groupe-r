@@ -8,7 +8,6 @@ library(rvest)
 library(pdftools)
 library(progress)
 library(tidyverse)
-install.packages("shiny")
 library(shiny)
 ```
 
@@ -56,52 +55,4 @@ colnames(weather) <- c("origin","year","month","day","hour","temp","dewp","humid
 dbWriteTable(mydb, "weather", weather, row.names = FALSE, overwrite = TRUE)
 
 dbDisconnect(mydb)
-```
-
-# WebApp
-```{r}
-# Interface utilisateur de l'application
-
-```
-
-
-
-
-
-```{r}
-library(readxl)
-airports <- read_excel("data/airports.xlsx")
-
-library(jsonlite)
-airlines <- jsonlite::fromJSON("data/airlines.json")
-```
-
-# Mission 1
-```{r}
-# Compter le nombre d'aéroports
-counts <- nrow(airports)
-print(counts)
-```
-
-```{r}
-# Nombre d'aéroprt qui ne changent pas de fuseaux horaires
-table(airports$dst)
-```
-
-```{r}
-# Nombre de fuseaux horaires différents
-library(dplyr)
-n_distinct(airports$tzone)
-```
-
-```{r}
-# Nombre de companies
-n_distinct(airlines$name)
-```
-
-```{r}
-# Nombre d'avions
-library("rvest")
-planes <- html_table(read_html("data/planes.html"))[[1]]
-nrow(planes)
 ```
