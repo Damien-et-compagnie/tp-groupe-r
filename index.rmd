@@ -183,9 +183,9 @@ filtered_df <- subset(df, dest %in% c("IAH", "HOU"))
 print(filtered_df)
 ```
 
-le nombre de vol partant de NYC vers Seattle
+le nombre de vol partant de NYC vers Seattle (dans ce dataset, tous les vols partent de NYC)
 ```{r}
-filtered_df <- nrow(subset(df, origin == "NYC" & dest == "SEA"))
+filtered_df <- nrow(subset(df, dest == "SEA"))
 print(filtered_df)
 ```
 Les companies qui deservent Seattle
