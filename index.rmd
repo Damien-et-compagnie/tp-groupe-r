@@ -382,9 +382,9 @@ View(delayed_flights_sort_number)
 ggplot(delayed_flights_sort_number, aes(x = carrier, y = delayed_flight_count)) +
   geom_bar(stat = "identity", fill = "lightcoral") +
   theme_minimal() +
-  labs(title = "Number of Delayed Flights by Carrier",
-       x = "Carrier",
-       y = "Number of Delayed Flights") +
+  labs(title = "Nombre de vols en retard par compagnie",
+       x = "Compagnie",
+       y = "Nombre de vols en retard") +
   theme(axis.text.x = element_text(angle = 90, hjust = 1))
 
 
@@ -413,9 +413,9 @@ View(delayed_flights_sort_percent)
 ggplot(delayed_flights_sort_percent, aes(x = carrier, y = delayed_percentage)) +
   geom_bar(stat = "identity", fill = "lightcoral") +
   theme_minimal() +
-  labs(title = "Number of Delayed Flights by Carrier",
-       x = "Carrier",
-       y = "percentage of Delayed Flights") +
+  labs(title = "Proportion de vols en retard par compagnie",
+       x = "Compagnie",
+       y = "Pourcentage de vols en retard") +
   theme(axis.text.x = element_text(angle = 90, hjust = 1))
 
 
