@@ -17,7 +17,10 @@ ui <- fluidPage(
   plotOutput("plot_destination_coverage"),
   
   # Nouveau graphique pour les compagnies UA, AA, DL
-  plotOutput("plot_filtered_flights")
+  plotOutput("plot_filtered_flights"),
+  plotOutput("plot_retard_moyen_distance"),
+  plotOutput("destination_retard"),
+  plotOutput("delay_companie")
 )
 
 # Serveur de l'application
@@ -126,7 +129,77 @@ server <- function(input, output, session) {
            y = "Nombre de vols") +
       theme_minimal()
   })
+  
+  
+  ## retard moyen par distance de vol
+  delay_distance_by_origin_dest <- flights %>%
+    group_by(origin, dest) %>%
+    summarise(
+      delay_moy = mean(arr_delay, na.rm = TRUE),
+      distance = first(distance)  
+    ) %>%
+    filter(dest != "HNL") %>%
+    arrange(desc(distance)) 
+  
+  output$plot_retard_moyen_distance <- renderPlot({
+    ggplot(delay_distance_by_origin_dest, aes(x = distance, y = delay_moy)) +
+      geom_point(aes(color = origin), alpha = 0.7) +
+      geom_smooth(method = "lm", se = FALSE, color = "black") +
+      labs(title = "Relation entre distance et retard moyen",
+           x = "Distance (miles)",
+           y = "Retard moyen (min)",
+           color = "Aéroport d'origine") +
+      theme_minimal()
+  })
+  
+  ## Destinations les plus touchées par le retard moyen
+  delay_by_dest <- flights %>%
+    filter(!is.na(dep_delay) & !is.na(arr_delay)) %>%
+    group_by(dest) %>%
+    summarise(
+      delay_moy = mean(arr_delay, na.rm = TRUE),  
+      n_vols = n()                              
+    ) %>%
+    arrange(desc(delay_moy)) 
+
+  output$destination_retard <- renderPlot({ggplot(delay_by_dest, aes(x = reorder(dest, delay_moy), y = delay_moy)) +
+      geom_bar(stat = "identity", fill = "steelblue") +
+      coord_flip() +
+      labs(
+        title = "Retard moyen par destinations ",
+        x = "Destination",
+        y = "Retard moyen (min)"
+      ) +
+      theme_minimal()})
+  
+  #retard par companie
+  delay_by_carrier <- flights %>%
+    mutate(
+      arr_delay = ifelse(is.na(arr_delay), 0, arr_delay),
+      dep_delay = ifelse(is.na(dep_delay), 0, dep_delay)
+    ) %>%
+    group_by(carrier) %>%
+    summarise(
+      delay_moy = mean(arr_delay, na.rm = TRUE),
+      n_vols = n()
+    ) %>%
+    arrange(desc(delay_moy))
+  
+  output$delay_companie <- renderPlot({
+    ggplot(delay_by_carrier, aes(x = reorder(carrier, delay_moy), y = delay_moy, fill = carrier)) +
+      geom_bar(stat = "identity") +
+      coord_flip() +
+      labs(
+        title = "Retard moyen par compagnies aériennes ",
+        x = "Compagnie aérienne",
+        y = "Retard moyen (min)",
+        fill = "Compagnie"
+      ) +
+      theme_minimal()  
+  })
+  
 }
+
 
 # Lancer l'application Shiny
 shinyApp(ui = ui, server = server)
