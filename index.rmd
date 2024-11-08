@@ -315,6 +315,12 @@ cancelled_flights <- flights %>%
 View(cancelled_flights)
 paste("Il y a ", nrow(cancelled_flights), " vols qui ont été annulés")
 
+flights_by_carrier <- flights %>%
+  group_by(carrier) %>%
+  summarise(flight_count = n())
+View(flights_by_carrier)
+
+
 cancelled_flights_by_carrier <- cancelled_flights %>%
   group_by(carrier) %>%
   summarise(cancelled_count = n()) %>%
@@ -329,15 +335,100 @@ cancelled_flights_by_dest <- cancelled_flights %>%
 View(cancelled_flights_by_dest)
 
 
-# 3 sort na values by departure
-flight_by_departure_na <- flights %>%
-  arrange(desc(is.na(dep_delay)), desc(dep_delay))
-View(flight_by_departure_na)
+# Plot vols annulés par compagnie (nombre)
+library(ggplot2)
+
+cancelled_flights_sort_number <- cancelled_flights_by_carrier %>%
+  left_join(flights_by_carrier, by = "carrier") %>%
+  select(-3) %>%
+  rename(flight_count = flight_count.y) %>%
+  arrange(flight_count) %>%
+  mutate(carrier = fct_reorder(carrier, flight_count))
+
+  
+View(cancelled_flights_sort_number)
+
+ggplot(cancelled_flights_sort_number, aes(x = carrier, y = cancelled_count)) +
+  geom_bar(stat = "identity", fill = "lightcoral") +
+  theme_minimal() +
+  labs(title = "Vols Annulés par Compagnie", 
+       x = "Compagnie", 
+       y = "Nombre de Vols Annulés") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
   
   
-# 4 
-flights_by_dep_delay_time <- flights %>%
-  arrange(desc(is.na(dep_delay)), desc(is.na(dep_time)), desc(dep_delay), dep_time)
-View(flights_by_dep_delay_time)
+# Plot vols annulé par compagnie (pourcentage)
+cancelled_flights_sort_percent <- cancelled_flights_by_carrier %>%
+  arrange(cancelled_percentage) %>%
+  mutate(carrier = fct_reorder(carrier, cancelled_percentage))
+
+ggplot(cancelled_flights_sort_percent, aes(x = carrier, y = cancelled_percentage)) +
+  geom_bar(stat = "identity", fill = "lightcoral") +
+  theme_minimal() +
+  labs(title = "Proportion de Vols Annulés par Compagnie", 
+       x = "Compagnie", 
+       y = "Proportion de Vols Annulés (%)") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+  
+  
+# Plot nombre de retard par compagnie
+delayed_flights_sort_number <- flights %>%
+  filter(arr_delay > 0) %>%
+  group_by(carrier) %>%
+  summarise(delayed_flight_count = n()) %>%
+  mutate(carrier = fct_reorder(carrier, delayed_flight_count))
+View(delayed_flights_sort_number)
+
+ggplot(delayed_flights_sort_number, aes(x = carrier, y = delayed_flight_count)) +
+  geom_bar(stat = "identity", fill = "lightcoral") +
+  theme_minimal() +
+  labs(title = "Number of Delayed Flights by Carrier",
+       x = "Carrier",
+       y = "Number of Delayed Flights") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+
+# Plot pourcentage de retard par compagnie
+
+delayed_flight_count <- flights %>%
+  filter(arr_delay > 0) %>%
+  left_join(flights_by_carrier, by = "carrier") %>%
+  group_by(carrier) %>%
+  summarise(delayed_flight_count = n()) %>%
+  left_join(delayed_flights_sort_number, by = "carrier") %>%
+  select(-3) %>%
+  rename(delayed_flight_count = delayed_flight_count.x)
+View(delayed_flight_count)
+
+delayed_flights_sort_percent <- flights %>%
+  filter(arr_delay > 0) %>%
+  select(carrier) %>%
+  left_join(flights_by_carrier, by = "carrier") %>%
+  left_join(delayed_flights_sort_number, by = "carrier") %>%
+  distinct(carrier, .keep_all = TRUE) %>%
+  mutate(delayed_percentage = (delayed_flight_count / flight_count) * 100) %>%
+  mutate(carrier = fct_reorder(carrier, delayed_percentage))
+View(delayed_flights_sort_percent)
+
+ggplot(delayed_flights_sort_percent, aes(x = carrier, y = delayed_percentage)) +
+  geom_bar(stat = "identity", fill = "lightcoral") +
+  theme_minimal() +
+  labs(title = "Number of Delayed Flights by Carrier",
+       x = "Carrier",
+       y = "percentage of Delayed Flights") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+
+  
+<!-- # 3 sort na values by departure -->
+<!-- flight_by_departure_na <- flights %>% -->
+<!--   arrange(desc(is.na(dep_delay)), desc(dep_delay)) -->
+<!-- View(flight_by_departure_na) -->
+
+
+<!-- # 4  -->
+<!-- flights_by_dep_delay_time <- flights %>% -->
+<!--   arrange(desc(is.na(dep_delay)), desc(is.na(dep_time)), desc(dep_delay), dep_time) -->
+<!-- View(flights_by_dep_delay_time) -->
 
   
