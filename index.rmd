@@ -294,5 +294,50 @@ View(shortest_distance_flights)
 longest_distance_flights <- flights %>%
   arrange(desc(distance))
 View(longest_distance_flights)
+
+
+# 3.4 Vols annulés
+# 1 na columns
+
+flights <- dbGetQuery(mydb, "SELECT *, origin AS flight_origin FROM `flights`")
+
+paste("nombre de valeurs nulle de dep_delays : ", sum(is.na(flights$dep_delay)))
+paste("nombre de valeurs nulle de dep_time : ", sum(is.na(flights$dep_time)))
+paste("nombre de valeurs nulle de arr_time : ", sum(is.na(flights$arr_time)))
+paste("nombre de valeurs nulle de arr_delay : ", sum(is.na(flights$arr_delay)))
+
+paste("la colonne ", colnames(flights)[apply(flights, 2, function(x) any(is.na(x)))]," contient au moins une valeurs nulle \r")
+
+# 2 vol annulés
+cancelled_flights <- flights %>%
+  filter(is.na(flights$dep_time) & is.na(flights$arr_time))
+
+View(cancelled_flights)
+paste("Il y a ", nrow(cancelled_flights), " vols qui ont été annulés")
+
+cancelled_flights_by_carrier <- cancelled_flights %>%
+  group_by(carrier) %>%
+  summarise(cancelled_count = n()) %>%
+  left_join(flights_by_carrier, by = "carrier") %>%
+  mutate(cancelled_percentage = (cancelled_count / flight_count) * 100)
+
+View(cancelled_flights_by_carrier)
+
+cancelled_flights_by_dest <- cancelled_flights %>%
+  group_by(dest) %>%
+  summarise(cancelled_count = n())
+View(cancelled_flights_by_dest)
+
+
+# 3 sort na values by departure
+flight_by_departure_na <- flights %>%
+  arrange(desc(is.na(dep_delay)), desc(dep_delay))
+View(flight_by_departure_na)
   
+  
+# 4 
+flights_by_dep_delay_time <- flights %>%
+  arrange(desc(is.na(dep_delay)), desc(is.na(dep_time)), desc(dep_delay), dep_time)
+View(flights_by_dep_delay_time)
+
   
